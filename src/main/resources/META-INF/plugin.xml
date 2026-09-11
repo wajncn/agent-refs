@@ -1,0 +1,77 @@
+<idea-plugin require-restart="false">
+    <id>com.wajnc.codex-app</id>
+    <name>Codex App Launcher [Beta]</name>
+    <vendor>王勤奋</vendor>
+    <description><![CDATA[
+        <h2>English</h2>
+        <p>
+            <b>Codex App Launcher [Beta]</b> connects IntelliJ IDEA with the Codex desktop app,
+            making it easier to open projects and send precise code references without manually
+            copying file paths or line numbers.
+        </p>
+        <p><b>Platform support:</b> Opening Codex App supports Windows and macOS. Sending code or file references currently supports Windows only; macOS reference sending is not supported yet.</p>
+        <ul>
+            <li>Open the current IntelliJ IDEA project directly in Codex App from the main toolbar.</li>
+            <li>Send selected code with its project-relative file path and exact line range on Windows.</li>
+            <li>Send the selected code reference, or the current file reference when there is no selection, from the editor context menu using <b>Send to Codex App</b>.</li>
+            <li>Append references to the current Codex App input without automatically submitting the message.</li>
+            <li>Customize the Windows PowerShell launch command in the IDE settings.</li>
+        </ul>
+        <p>
+            Project paths are resolved to their real absolute locations before Codex App is launched.
+            Project launching supports Windows and macOS. Reference insertion currently supports Windows only.
+        </p>
+
+        <h2>中文</h2>
+        <p>
+            <b>Codex App Launcher [Beta]</b> 用于连接 IntelliJ IDEA 与 Codex 桌面应用，
+            让开发者无需手动复制文件路径和行号，即可快速打开项目并发送准确的代码引用。
+        </p>
+        <p><b>平台支持：</b>打开 Codex App 支持 Windows 和 macOS；发送代码或文件引用目前仅支持 Windows，暂不支持 macOS 引用发送。</p>
+        <ul>
+            <li>通过 IDEA 主工具栏直接在 Codex App 中打开当前项目。</li>
+            <li>在 Windows 上发送选中的代码，并自动携带项目相对路径和准确行号范围。</li>
+            <li>通过编辑器右键菜单中的 <b>Send to Codex App</b> 发送选中的代码引用；未选中代码时发送当前文件引用。</li>
+            <li>引用只会追加到 Codex App 当前输入框，不会自动提交消息。</li>
+            <li>可以在 IDEA 设置中自定义 Windows PowerShell 启动命令。</li>
+        </ul>
+        <p>
+            插件会先将项目路径解析为真实绝对路径，再启动 Codex App。
+            项目启动支持 Windows 和 macOS；当前引用追加仅支持 Windows。
+        </p>
+        ]]></description>
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationConfigurable
+                parentId="tools"
+                id="com.wajnc.codexapp.settings"
+                displayName="Codex App Launcher [Beta]"
+                instance="com.wajnc.codexapp.CodexAppSettingsConfigurable"/>
+        <notificationGroup id="Codex App" displayType="BALLOON" isLogByDefault="true"/>
+    </extensions>
+
+    <actions>
+        <action id="com.wajnc.codexapp.OpenCodexApp"
+                class="com.wajnc.codexapp.OpenCodexAppAction"
+                text="Open Codex App"
+                description="Open the current project in Codex App"
+                icon="/icons/codex.png">
+            <add-to-group group-id="MainToolbarRight" anchor="last"/>
+        </action>
+        <action id="com.wajnc.codexapp.AppendSelectionReference"
+                class="com.wajnc.codexapp.AppendSelectionReferenceAction"
+                text="Add Reference to Codex App"
+                description="Append the selected code reference to the current Codex App input"
+                icon="/icons/codex.png">
+            <add-to-group group-id="Floating.CodeToolbar" anchor="last"/>
+        </action>
+        <action id="com.wajnc.codexapp.AppendFileReference"
+                class="com.wajnc.codexapp.AppendFileReferenceAction"
+                text="Send to Codex App"
+                description="Append the selected code reference, or the current file reference when there is no selection, to the Codex App input"
+                icon="/icons/codex.png">
+            <add-to-group group-id="EditorPopupMenu" anchor="before" relative-to-action="EditorPaste"/>
+        </action>
+    </actions>
+</idea-plugin>
