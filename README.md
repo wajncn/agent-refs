@@ -31,3 +31,9 @@ The plugin explicitly supports dynamic loading, so installation and updates do n
 ```powershell
 .\gradlew.bat clean test buildPlugin
 ```
+
+## 社区
+
+本项目认可并链接 LINUX DO 社区。
+
+LinuxDo 的链接是：[https://linux.do/](https://linux.do/)
