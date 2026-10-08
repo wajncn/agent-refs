@@ -51,7 +51,7 @@ class CopyCodexReferenceActionTest : BasePlatformTestCase() {
 
         CopyCodexReferenceAction().actionPerformed(eventFor(editor))
 
-        assertEquals("Example.txt#L2", copiedText().substringAfterLast('\\'))
+        assertEquals("@Example.txt#L2", copiedText())
     }
 
     fun testCodeWithoutSelectionFallsBackToTheFileReference() {
@@ -60,7 +60,7 @@ class CopyCodexReferenceActionTest : BasePlatformTestCase() {
 
         CopyCodexReferenceAction().actionPerformed(eventFor(editor))
 
-        assertEquals("Example.txt", copiedText().substringAfterLast('\\'))
+        assertEquals("@Example.txt", copiedText())
     }
 
     fun testWordSelectionIsCopiedLikeAManualSelection() {
@@ -69,7 +69,7 @@ class CopyCodexReferenceActionTest : BasePlatformTestCase() {
 
         CopyCodexReferenceAction().actionPerformed(eventFor(editor))
 
-        assertEquals("Example.txt#L2", copiedText().substringAfterLast('\\'))
+        assertEquals("@Example.txt#L2", copiedText())
     }
 
     fun testFloatingToolbarOffersTheActionForAWordSelection() {

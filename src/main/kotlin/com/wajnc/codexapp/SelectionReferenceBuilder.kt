@@ -35,6 +35,6 @@ internal object SelectionReferenceBuilder {
         val relativePath = projectRoot.relativize(selectedFile)
             .joinToString(pathSeparator) { it.toString() }
 
-        return "${projectRoot.fileName}$pathSeparator$relativePath"
+        return "@$relativePath"
     }
 }

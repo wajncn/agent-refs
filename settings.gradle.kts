@@ -1,6 +1,6 @@
 import org.jetbrains.intellij.platform.gradle.extensions.intellijPlatform
 
-rootProject.name = "codex-app-launcher"
+rootProject.name = "agent-refs"
 
 pluginManagement {
     plugins {

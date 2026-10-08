@@ -12,7 +12,7 @@
         <ul>
             <li>Select code and click the copy icon in the floating code toolbar; double-clicking a method or variable behaves exactly like a manual selection.</li>
             <li>Copy from the editor context menu using <b>Copy as Code Reference</b>, placed right above <b>Copy / Paste Special</b>, or with <b>Ctrl+Shift+C</b>.</li>
-            <li>Every reference carries the project-relative file path and the exact line range, such as <code>demo\src\Example.java#L10-12</code>.</li>
+            <li>Every reference carries the project-relative file path and the exact line range, such as <code>@src\Example.java#L10-12</code>.</li>
             <li>When nothing is selected, the current file reference is copied without line numbers.</li>
             <li>References go to the clipboard only, so they work with any agent or chat window.</li>
         </ul>
@@ -26,7 +26,7 @@
         <ul>
             <li>用鼠标选中代码后，点击浮动工具栏里的复制图标；双击方法或变量与手动选中代码的行为完全一致。</li>
             <li>通过编辑器右键菜单中的 <b>Copy as Code Reference</b>（位于 <b>Copy / Paste Special</b> 上方）或快捷键 <b>Ctrl+Shift+C</b> 复制。</li>
-            <li>每条引用都带上项目相对路径和准确的行号范围，例如 <code>demo\src\Example.java#L10-12</code>。</li>
+            <li>每条引用都带上项目相对路径和准确的行号范围，例如 <code>@src\Example.java#L10-12</code>。</li>
             <li>未选中代码时复制当前文件引用，不带行号。</li>
             <li>引用只会复制到剪贴板，因此适用于任意 Agent 或聊天输入框。</li>
         </ul>

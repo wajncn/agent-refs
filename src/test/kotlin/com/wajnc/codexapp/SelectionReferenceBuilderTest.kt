@@ -25,7 +25,7 @@ class SelectionReferenceBuilderTest {
         )
 
         assertEquals(
-            "broker-trading-svc\\src\\main\\java\\com\\innodealing\\brokertrading\\service\\impl\\" +
+            "@src\\main\\java\\com\\innodealing\\brokertrading\\service\\impl\\" +
                 "ApprovalTradeServiceImpl.java#L53-54",
             reference,
         )
@@ -38,13 +38,13 @@ class SelectionReferenceBuilderTest {
 
         val reference = SelectionReferenceBuilder.build(project.toString(), file.toString(), 8, 8)
 
-        assertEquals("sample-project\\src\\main\\java\\Example.java#L8", reference)
+        assertEquals("@src\\main\\java\\Example.java#L8", reference)
     }
 
     @Test
     fun `builds a mac reference with forward slashes`() {
         assertEquals(
-            "project/src/main/Example.java#L10-12",
+            "@src/main/Example.java#L10-12",
             SelectionReferenceBuilder.build("/work/project", "/work/project/src/main/Example.java", 10, 12, "/"),
         )
     }
@@ -63,6 +63,6 @@ class SelectionReferenceBuilderTest {
             selectionEnd = 24,
         )
 
-        assertEquals("sample-project\\src\\Example.java#L1-3", reference)
+        assertEquals("@src\\Example.java#L1-3", reference)
     }
 }
