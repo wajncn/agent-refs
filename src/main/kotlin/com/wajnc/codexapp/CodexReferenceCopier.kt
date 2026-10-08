@@ -9,6 +9,8 @@ import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.vfs.VirtualFile
 import java.awt.datatransfer.StringSelection
 
+internal const val NOTIFICATION_GROUP = "Agent Refs"
+
 internal object CodexReferenceCopier {
     fun copy(project: Project, file: VirtualFile, editor: Editor?): Boolean {
         val reference = buildReference(project, file, editor) ?: return false
@@ -47,7 +49,7 @@ internal object CodexReferenceCopier {
 
     private fun notifyCopied(project: Project) {
         NotificationGroupManager.getInstance()
-            .getNotificationGroup(AGENT_NOTIFICATION_GROUP)
+            .getNotificationGroup(NOTIFICATION_GROUP)
             .createNotification(
                 "Code Reference Copied",
                 "Paste it into your agent's input.",
@@ -58,7 +60,7 @@ internal object CodexReferenceCopier {
 
     private fun notifyError(project: Project, message: String) {
         NotificationGroupManager.getInstance()
-            .getNotificationGroup(AGENT_NOTIFICATION_GROUP)
+            .getNotificationGroup(NOTIFICATION_GROUP)
             .createNotification("Cannot copy the code reference", message, NotificationType.ERROR)
             .notify(project)
     }
