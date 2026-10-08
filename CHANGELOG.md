@@ -13,6 +13,7 @@
 - 新增 Ctrl+Shift+C 快捷键。
 - 修复编辑器内 Ctrl+Shift+C 被 IDEA 自带的 Copy Path/Reference 抢占的问题：光标在编辑器时优先复制代码引用，选中代码带行号范围，并弹出右下角提示。
 - 复制格式改为 `@` + 项目相对路径（例如 `@src\main\Example.java#L10-12`），不再包含项目文件夹名。
+- 插件 ID 改为 `com.wajnc.agent-refs`，在 Marketplace 上作为全新插件上架。
 
 ## [0.0.3] - 2026-09-03
 

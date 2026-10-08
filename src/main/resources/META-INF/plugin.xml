@@ -1,5 +1,5 @@
 <idea-plugin require-restart="false">
-    <id>com.wajnc.codex-app</id>
+    <id>com.wajnc.agent-refs</id>
     <name>Agent Refs [Beta]</name>
     <vendor>王勤奋</vendor>
     <description><![CDATA[
