@@ -1,43 +1,41 @@
 <idea-plugin require-restart="false">
     <id>com.wajnc.codex-app</id>
-    <name>Codex App Launcher [Beta]</name>
+    <name>Agent Refs [Beta]</name>
     <vendor>王勤奋</vendor>
     <description><![CDATA[
         <h2>English</h2>
         <p>
-            <b>Codex App Launcher [Beta]</b> connects IntelliJ IDEA with the Codex desktop app,
-            making it easier to open projects and copy precise code references without manually
-            typing file paths or line numbers.
+            <b>Agent Refs [Beta]</b> copies precise code references from the IntelliJ IDEA editor to
+            the clipboard, so you can paste them straight into a coding agent without manually typing
+            file paths or line numbers. It also opens the current project in the agent app you use.
         </p>
-        <p><b>Platform support:</b> Opening Codex App supports Windows and macOS. Copying code references is available on every platform.</p>
+        <p><b>Platform support:</b> Opening an agent app supports Windows and macOS. Copying code references is available on every platform.</p>
         <ul>
-            <li>Open the current IntelliJ IDEA project directly in Codex App from the main toolbar.</li>
-            <li>Copy selected code with its project-relative file path and exact line range.</li>
+            <li>Pick an agent from the <b>Open Agent</b> dropdown in the main toolbar to open the current project in it. Codex and ZCode are configured out of the box.</li>
+            <li>Add, remove or reorder agents, and customize their Windows PowerShell and macOS shell commands, under <b>Settings | Tools | Agent Refs</b>.</li>
+            <li>Copy selected code with its project-relative file path and exact line range; double-clicking a method or variable behaves exactly like a manual selection.</li>
             <li>Copy the selected code reference, or the current file reference when there is no selection, from the editor context menu using <b>Copy as Code Reference</b>, placed right above <b>Copy / Paste Special</b>, or with <b>Ctrl+Shift+C</b>.</li>
-            <li>References go to the clipboard, ready to paste into the Codex App input.</li>
-            <li>Customize the Windows PowerShell launch command in the IDE settings.</li>
+            <li>References go to the clipboard, ready to paste into any agent.</li>
         </ul>
         <p>
-            Project paths are resolved to their real absolute locations before Codex App is launched.
-            Project launching supports Windows and macOS.
+            Project paths are resolved to their real absolute locations before an agent app is launched.
         </p>
 
         <h2>中文</h2>
         <p>
-            <b>Codex App Launcher [Beta]</b> 用于连接 IntelliJ IDEA 与 Codex 桌面应用，
-            让开发者无需手动拼写文件路径和行号，即可在 Codex App 中打开项目并复制准确的代码引用。
+            <b>Agent Refs [Beta]</b> 用于在 IntelliJ IDEA 里把选中的代码复制成准确的代码引用，
+            直接粘贴给编码 Agent，无需手动拼写文件路径和行号；同时支持一键用当前项目打开常用的 Agent 应用。
         </p>
-        <p><b>平台支持：</b>打开 Codex App 支持 Windows 和 macOS；复制代码引用在所有平台都可以使用。</p>
+        <p><b>平台支持：</b>打开 Agent 支持 Windows 和 macOS；复制代码引用在所有平台都可以使用。</p>
         <ul>
-            <li>通过 IDEA 主工具栏直接在 Codex App 中打开当前项目。</li>
-            <li>复制选中的代码，自动携带项目相对路径和准确行号范围。</li>
+            <li>通过主工具栏右侧的 <b>Open Agent</b> 下拉菜单，用当前项目打开对应的 Agent 应用；默认内置 Codex 与 ZCode。</li>
+            <li>在 <b>Settings | Tools | Agent Refs</b> 中增删 Agent，并自定义各自的 Windows PowerShell 与 macOS 命令。</li>
+            <li>复制选中的代码，自动携带项目相对路径和准确行号范围；双击方法或变量与手动选中代码的行为完全一致。</li>
             <li>通过编辑器右键菜单中的 <b>Copy as Code Reference</b>（位于 <b>Copy / Paste Special</b> 上方）或快捷键 <b>Ctrl+Shift+C</b> 复制选中的代码引用；未选中代码时复制当前文件引用。</li>
-            <li>引用只会复制到剪贴板，可以直接粘贴到 Codex App 输入框。</li>
-            <li>可以在 IDEA 设置中自定义 Windows PowerShell 启动命令。</li>
+            <li>引用只会复制到剪贴板，可以直接粘贴到任意 Agent 的输入框。</li>
         </ul>
         <p>
-            插件会先将项目路径解析为真实绝对路径，再启动 Codex App。
-            项目启动支持 Windows 和 macOS。
+            插件会先将项目路径解析为真实绝对路径，再启动对应的 Agent 应用。
         </p>
         ]]></description>
     <depends>com.intellij.modules.platform</depends>
@@ -46,20 +44,21 @@
         <applicationConfigurable
                 parentId="tools"
                 id="com.wajnc.codexapp.settings"
-                displayName="Codex App Launcher [Beta]"
+                displayName="Agent Refs"
                 instance="com.wajnc.codexapp.CodexAppSettingsConfigurable"/>
-        <notificationGroup id="Codex App" displayType="BALLOON" isLogByDefault="true"/>
+        <notificationGroup id="Agent Refs" displayType="BALLOON" isLogByDefault="true"/>
         <editorFactoryListener implementation="com.wajnc.codexapp.CopyCodexReferenceShortcutInstaller"/>
     </extensions>
 
     <actions>
-        <action id="com.wajnc.codexapp.OpenCodexApp"
-                class="com.wajnc.codexapp.OpenCodexAppAction"
-                text="Open Codex App"
-                description="Open the current project in Codex App"
-                icon="/icons/codex.png">
+        <group id="com.wajnc.codexapp.OpenAgent"
+               class="com.wajnc.codexapp.OpenAgentGroup"
+               text="Open Agent"
+               description="Open the current project in a coding agent app"
+               icon="AllIcons.Actions.OpenNewTab"
+               popup="true">
             <add-to-group group-id="MainToolbarRight" anchor="last"/>
-        </action>
+        </group>
         <action id="com.wajnc.codexapp.CopySelectionCodexReference"
                 class="com.wajnc.codexapp.CopySelectionCodexReferenceAction"
                 text="Copy as Code Reference"

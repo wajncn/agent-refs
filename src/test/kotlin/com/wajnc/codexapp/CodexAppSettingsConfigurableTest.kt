@@ -1,63 +1,140 @@
 package com.wajnc.codexapp
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Test
+import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import java.awt.Component
 import java.awt.Container
 import javax.swing.JButton
 import javax.swing.JTextArea
-import javax.swing.SwingUtilities
+import javax.swing.JTextField
 
-class CodexAppSettingsConfigurableTest {
-    @Test
-    fun `uses the plugin name as the settings display name`() {
-        assertEquals("Codex App Launcher", CodexAppSettingsConfigurable().displayName)
+class CodexAppSettingsConfigurableTest : BasePlatformTestCase() {
+    private lateinit var originalAgents: List<CodexAppSettings.AgentState>
+
+    override fun setUp() {
+        super.setUp()
+        originalAgents = CodexAppSettings.getInstance().agents
     }
 
-    @Test
-    fun `migrates the legacy default mac command`() {
+    override fun tearDown() {
+        try {
+            CodexAppSettings.getInstance().agents = originalAgents
+        } finally {
+            super.tearDown()
+        }
+    }
+
+    fun testUsesThePluginNameAsTheSettingsDisplayName() {
+        assertEquals("Agent Refs", CodexAppSettingsConfigurable().displayName)
+    }
+
+    fun testMigratesTheLegacySingleAgentSettingsIntoTheCodexCard() {
         val settings = CodexAppSettings()
         val state = CodexAppSettings.SettingsState().apply {
-            macCommand = """
-                codexapp() {
-                    local path="${'$'}{1:-.}"
-                    local resolved_path
-                    resolved_path="${'$'}(cd "${'$'}path" && pwd -P)" || return 1
-                    local encoded_path
-                    encoded_path="${'$'}(/usr/bin/osascript -l JavaScript -e "function run(argv) { return encodeURIComponent(argv[0]).replace(/[!'()*]/g, function(c) { return '%' + c.charCodeAt(0).toString(16).toUpperCase(); }); }" "${'$'}resolved_path")" || return 1
-                    /usr/bin/open "codex://threads/new?path=${'$'}encoded_path"
-                }
-
-                codexapp "${'$'}CODEX_IDEA_PROJECT_PATH"
-            """.trimIndent()
+            windowsCommand = "custom windows command"
+            macCommand = AgentDefaults.LEGACY_CODEX_MAC_COMMAND
         }
 
         settings.loadState(state)
 
-        assertEquals(CodexAppSettings.DEFAULT_MAC_COMMAND, settings.macCommand)
+        assertEquals(listOf("Codex", "ZCode"), settings.agents.map { it.name })
+        assertEquals("custom windows command", settings.agents[0].windowsCommand)
+        assertEquals(AgentDefaults.CODEX_MAC_COMMAND, settings.agents[0].macCommand)
+        assertEquals(AgentDefaults.ZCODE_WINDOWS_COMMAND, settings.agents[1].windowsCommand)
     }
 
-    @Test
-    fun `restore defaults restores both built-in commands`() {
-        SwingUtilities.invokeAndWait {
-            val component = CodexAppSettingsConfigurable().createComponent()
-            val textAreas = component.descendants().filterIsInstance<JTextArea>()
-            val restoreButton = component.descendants().filterIsInstance<JButton>()
-                .singleOrNull { it.text == "Restore Defaults" }
-
-            assertEquals(2, textAreas.size)
-            assertNotNull(restoreButton)
-
-            textAreas.forEach { it.text = "custom command" }
-            restoreButton!!.doClick()
-
-            assertEquals(
-                setOf(CodexAppSettings.DEFAULT_WINDOWS_COMMAND, CodexAppSettings.DEFAULT_MAC_COMMAND),
-                textAreas.map { it.text }.toSet(),
-            )
+    fun testKeepsTheBuiltInCommandsOfAnUnchangedLegacyInstallation() {
+        val settings = CodexAppSettings()
+        val state = CodexAppSettings.SettingsState().apply {
+            windowsCommand = AgentDefaults.CODEX_WINDOWS_COMMAND
+            macCommand = AgentDefaults.CODEX_MAC_COMMAND
         }
+
+        settings.loadState(state)
+
+        assertEquals(AgentDefaults.CODEX_WINDOWS_COMMAND, settings.agents[0].windowsCommand)
+        assertEquals(AgentDefaults.CODEX_MAC_COMMAND, settings.agents[0].macCommand)
     }
+
+    fun testKeepsAnEmptyAgentListEmpty() {
+        val settings = CodexAppSettings()
+
+        settings.loadState(CodexAppSettings.SettingsState())
+
+        assertTrue(settings.agents.isEmpty())
+    }
+
+    fun testRestoreDefaultsRestoresTheBuiltInAgents() {
+        CodexAppSettings.getInstance().agents = listOf(agent("Custom", "w", "m"))
+
+        val component = CodexAppSettingsConfigurable().createComponent()
+        component.textAreas().forEach { it.text = "custom command" }
+
+        component.buttons().single { it.text == "Restore Defaults" }.doClick()
+
+        assertEquals(listOf("Codex", "ZCode"), component.nameFields().map { it.text })
+        assertEquals(
+            setOf(
+                AgentDefaults.CODEX_WINDOWS_COMMAND,
+                AgentDefaults.CODEX_MAC_COMMAND,
+                AgentDefaults.ZCODE_WINDOWS_COMMAND,
+                AgentDefaults.ZCODE_MAC_COMMAND,
+            ),
+            component.textAreas().map { it.text }.toSet(),
+        )
+    }
+
+    fun testAddAndRemoveAgentCards() {
+        CodexAppSettings.getInstance().agents = AgentDefaults.defaultAgents()
+
+        val component = CodexAppSettingsConfigurable().createComponent()
+        assertEquals(4, component.textAreas().size)
+
+        component.buttons().single { it.text == "Add Agent" }.doClick()
+        assertEquals(6, component.textAreas().size)
+        assertEquals(3, component.nameFields().size)
+
+        component.buttons().first { it.text == "Remove" }.doClick()
+        assertEquals(4, component.textAreas().size)
+    }
+
+    fun testApplyAndResetKeepEveryAgentInSync() {
+        CodexAppSettings.getInstance().agents = AgentDefaults.defaultAgents()
+
+        val configurable = CodexAppSettingsConfigurable()
+        val component = configurable.createComponent()
+        assertFalse(configurable.isModified)
+
+        component.nameFields()[1].text = "Zed Code"
+        component.textAreas()[2].text = "custom windows command"
+        component.textAreas()[3].text = "custom mac command"
+        assertTrue(configurable.isModified)
+
+        configurable.apply()
+
+        val agents = CodexAppSettings.getInstance().agents
+        assertEquals("Zed Code", agents[1].name)
+        assertEquals("custom windows command", agents[1].windowsCommand)
+        assertEquals("custom mac command", agents[1].macCommand)
+        assertEquals(AgentDefaults.CODEX_WINDOWS_COMMAND, agents[0].windowsCommand)
+
+        component.textAreas()[0].text = "stale command"
+        configurable.reset()
+
+        assertEquals(AgentDefaults.CODEX_WINDOWS_COMMAND, component.textAreas()[0].text)
+        assertFalse(configurable.isModified)
+    }
+
+    private fun agent(name: String, windowsCommand: String, macCommand: String) =
+        CodexAppSettings.AgentState(name, windowsCommand, macCommand)
+
+    private fun Component.nameFields(): List<JTextField> =
+        descendants().filterIsInstance<JTextField>()
+
+    private fun Component.textAreas(): List<JTextArea> =
+        descendants().filterIsInstance<JTextArea>()
+
+    private fun Component.buttons(): List<JButton> =
+        descendants().filterIsInstance<JButton>()
 
     private fun Component.descendants(): List<Component> = buildList {
         add(this@descendants)

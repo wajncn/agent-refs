@@ -9,65 +9,60 @@ import com.intellij.openapi.components.Storage
 @Service(Service.Level.APP)
 @State(name = "CodexAppSettings", storages = [Storage("codexApp.xml")])
 class CodexAppSettings : PersistentStateComponent<CodexAppSettings.SettingsState> {
+    class AgentState(
+        var name: String = "",
+        var windowsCommand: String = "",
+        var macCommand: String = "",
+    )
+
     class SettingsState {
+        var agents: MutableList<AgentState> = mutableListOf()
+
+        /** Single-agent settings written by older plugin versions, read only for migration. */
         var command: String? = null
-        var windowsCommand: String = DEFAULT_WINDOWS_COMMAND
-        var macCommand: String = DEFAULT_MAC_COMMAND
+        var windowsCommand: String? = null
+        var macCommand: String? = null
     }
 
-    private var settingsState = SettingsState()
+    private var settingsState = SettingsState().apply {
+        agents = AgentDefaults.defaultAgents().toMutableList()
+    }
 
-    var windowsCommand: String
-        get() = settingsState.windowsCommand
+    var agents: List<AgentState>
+        get() = settingsState.agents
         set(value) {
-            settingsState.windowsCommand = value
-        }
-
-    var macCommand: String
-        get() = settingsState.macCommand
-        set(value) {
-            settingsState.macCommand = value
+            settingsState.agents = value.toMutableList()
         }
 
     override fun getState(): SettingsState = settingsState
 
     override fun loadState(state: SettingsState) {
-        if (!state.command.isNullOrBlank() && state.windowsCommand == DEFAULT_WINDOWS_COMMAND) {
-            state.windowsCommand = state.command!!
-        }
-        if (state.macCommand == LEGACY_DEFAULT_MAC_COMMAND) {
-            state.macCommand = DEFAULT_MAC_COMMAND
-        }
+        if (state.agents.isEmpty()) state.agents.addAll(migrateLegacyAgent(state))
         state.command = null
+        state.windowsCommand = null
+        state.macCommand = null
         settingsState = state
     }
 
+    private fun migrateLegacyAgent(state: SettingsState): List<AgentState> {
+        val legacyWindows = state.windowsCommand?.takeIf { it.isNotBlank() }
+            ?: state.command?.takeIf { it.isNotBlank() }
+        val legacyMac = state.macCommand?.takeIf { it.isNotBlank() }
+        if (legacyWindows == null && legacyMac == null) return emptyList()
+
+        val codexWindows = legacyWindows
+            ?.takeIf { it != AgentDefaults.CODEX_WINDOWS_COMMAND }
+            ?: AgentDefaults.CODEX_WINDOWS_COMMAND
+        val codexMac = legacyMac
+            ?.takeIf { it != AgentDefaults.LEGACY_CODEX_MAC_COMMAND }
+            ?: AgentDefaults.CODEX_MAC_COMMAND
+        return listOf(
+            AgentState("Codex", codexWindows, codexMac),
+            AgentState("ZCode", AgentDefaults.ZCODE_WINDOWS_COMMAND, AgentDefaults.ZCODE_MAC_COMMAND),
+        )
+    }
+
     companion object {
-        val DEFAULT_WINDOWS_COMMAND = """
-            function codexapp {
-                param([string] ${'$'}Path = ".")
-                ${'$'}resolvedPath = (Resolve-Path -LiteralPath ${'$'}Path -ErrorAction Stop).Path
-                Start-Process "codex://threads/new?path=${'$'}([uri]::EscapeDataString(${'$'}resolvedPath))"
-            }
-
-            codexapp -Path ${'$'}Path
-        """.trimIndent()
-
-        val DEFAULT_MAC_COMMAND = "codex app \"${'$'}CODEX_IDEA_PROJECT_PATH\""
-
-        private val LEGACY_DEFAULT_MAC_COMMAND = """
-            codexapp() {
-                local path="${'$'}{1:-.}"
-                local resolved_path
-                resolved_path="${'$'}(cd "${'$'}path" && pwd -P)" || return 1
-                local encoded_path
-                encoded_path="${'$'}(/usr/bin/osascript -l JavaScript -e "function run(argv) { return encodeURIComponent(argv[0]).replace(/[!'()*]/g, function(c) { return '%' + c.charCodeAt(0).toString(16).toUpperCase(); }); }" "${'$'}resolved_path")" || return 1
-                /usr/bin/open "codex://threads/new?path=${'$'}encoded_path"
-            }
-
-            codexapp "${'$'}CODEX_IDEA_PROJECT_PATH"
-        """.trimIndent()
-
         fun getInstance(): CodexAppSettings =
             ApplicationManager.getApplication().getService(CodexAppSettings::class.java)
     }
